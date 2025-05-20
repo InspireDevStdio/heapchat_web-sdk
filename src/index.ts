@@ -1,15 +1,15 @@
-interface HeapChatConfig {
+interface HeapchatConfig {
   apiKey: string;
   position?: 'bottom-right' | 'bottom-left';
 }
 
-class HeapChat {
+class Heapchat {
   private iframe: HTMLIFrameElement | null = null;
-  private static instance: HeapChat | null = null;
+  private static instance: Heapchat | null = null;
 
-  constructor(private config: HeapChatConfig) {
-    if (HeapChat.instance) {
-      return HeapChat.instance;
+  constructor(private config: HeapchatConfig) {
+    if (Heapchat.instance) {
+      return Heapchat.instance;
     }
 
     this.config = {
@@ -17,7 +17,7 @@ class HeapChat {
       ...config
     };
     
-    HeapChat.instance = this;
+    Heapchat.instance = this;
     this.init();
     return this;
   }
@@ -89,9 +89,9 @@ class HeapChat {
     if (this.iframe) {
       document.body.removeChild(this.iframe);
       this.iframe = null;
-      HeapChat.instance = null;
+      Heapchat.instance = null;
     }
   }
 }
 
-export default HeapChat;
+export default Heapchat;
