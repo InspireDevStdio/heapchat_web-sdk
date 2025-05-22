@@ -1,19 +1,18 @@
 {
   "name": "heapchat",
-  "version": "1.0.1",
+  "version": "1.0.5",
   "description": "This is heapchat web sdk to connect website with the dashboard",
   "publishConfig": {
     "access": "public"
   },
-  "main": "dist/index.cjs",
+  "main": "dist/index.mjs",
   "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "types": "dist/index.d.mts",
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "rm -rf dist && tsup",
     "start": "node dist/index.js"
   },
   "repository": {
