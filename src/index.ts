@@ -1,12 +1,21 @@
 interface HeapchatConfig {
   apiKey: string;
   position?: 'bottom-right' | 'bottom-left';
+  supportImage?: string;
+}
+
+interface UserData {
+  name?: string;
+  email?: string;
+  phone?: string;
 }
 
 class Heapchat {
   private iframe: HTMLIFrameElement | null = null;
   private toggleButton: HTMLButtonElement | null = null;
   private static instance: Heapchat | null = null;
+  private isReady: boolean = false;
+  private messageQueue: Array<{ type: string; payload: any }> = [];
 
   constructor(private config: HeapchatConfig) {
     if (Heapchat.instance) {
@@ -64,13 +73,7 @@ class Heapchat {
 
     // Create iframe
     this.iframe = document.createElement('iframe');
-    
-    // Add API key to URL
-    const params = new URLSearchParams({
-      apiKey: this.config.apiKey
-    });
-
-    this.iframe.src = `https://webui.heap.chat?${params.toString()}`;
+    this.iframe.src = `https://webui.heap.chat`;
     
     // Set iframe styles
     this.iframe.style.cssText = `
@@ -89,7 +92,43 @@ class Heapchat {
       display: none;
     `;
 
+    // Listen for messages from iframe
+    window.addEventListener('message', this.handleMessage);
+
     document.body.appendChild(this.iframe);
+  }
+
+  private handleMessage = (event: MessageEvent) => {
+    // Verify origin
+    if (event.origin !== 'https://webui.heap.chat') return;
+
+    const { type } = event.data;
+
+    if (type === 'READY') {
+      this.isReady = true;
+      this.sendMessage({
+        type: 'INIT',
+        apiKey: this.config.apiKey,
+        supportImage: this.config.supportImage
+      });
+
+      // Process queued messages
+      while (this.messageQueue.length > 0) {
+        const message = this.messageQueue.shift();
+        if (message) {
+          this.sendMessage(message);
+        }
+      }
+    }
+  };
+
+  private sendMessage(message: any) {
+    if (!this.iframe || !this.isReady) {
+      this.messageQueue.push(message);
+      return;
+    }
+
+    this.iframe.contentWindow?.postMessage(message, 'https://webui.heap.chat');
   }
 
   public show(): void {
@@ -120,6 +159,7 @@ class Heapchat {
 
   public destroy(): void {
     if (this.iframe) {
+      window.removeEventListener('message', this.handleMessage);
       document.body.removeChild(this.iframe);
       this.iframe = null;
     }
@@ -128,6 +168,34 @@ class Heapchat {
       this.toggleButton = null;
     }
     Heapchat.instance = null;
+  }
+
+  // Public API methods
+  public setCustomerData(userData: UserData): void {
+    this.sendMessage({
+      type: 'SET_CUSTOMER_DATA',
+      userData
+    });
+  }
+
+  public login(userId: string): void {
+    this.sendMessage({
+      type: 'LOGIN',
+      userId
+    });
+  }
+
+  public logout(): void {
+    this.sendMessage({
+      type: 'LOGOUT'
+    });
+  }
+
+  public setDeviceToken(deviceToken: string): void {
+    this.sendMessage({
+      type: 'SET_DEVICE_TOKEN',
+      deviceToken
+    });
   }
 }
 
