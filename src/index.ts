@@ -111,10 +111,12 @@ class Heapchat {
   }
 
   public login(userId: string) {
-    this.sendMessage({
-      type: 'LOGIN',
-      userId: userId
-    });
+    setTimeout(() => {
+      this.sendMessage({
+        type: 'LOGIN',
+        userId: userId
+      });
+    }, 1000);
   }
 
   public logout() {
@@ -124,10 +126,12 @@ class Heapchat {
   }
 
   public setCustomerData(data: CustomerDataModel) {
-    this.sendMessage({
-      type: 'CUSTOMER_DATA',
-      data: data
-    });
+    setTimeout(() => {
+      this.sendMessage({
+        type: 'CUSTOMER_DATA',
+        data: data
+      });
+    }, 1000);
   }
 
   public show(): void {
