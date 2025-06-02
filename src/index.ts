@@ -4,11 +4,17 @@ interface HeapchatConfig {
   supportImage?: string;
 }
 
+interface CustomerDataModel {
+  name?: string;
+  email?: string;
+  phone?: string;
+}
 
 class Heapchat {
   private iframe: HTMLIFrameElement | null = null;
   private toggleButton: HTMLButtonElement | null = null;
   private static instance: Heapchat | null = null;
+  private isInitialized: boolean = false;
 
   constructor(private config: HeapchatConfig) {
     if (Heapchat.instance) {
@@ -88,19 +94,40 @@ class Heapchat {
 
     this.iframe.addEventListener('load', () => {
       console.log('IFRAME LOADED');
-      setTimeout(() => {
-        this.sendMessage({
-          type: 'INIT',
-          apiKey: this.config.apiKey,
-          supportImage: this.config.supportImage
-        });
-      }, 100);
+      this.isInitialized = true;
+      this.sendMessage({
+        type: 'INIT',
+        apiKey: this.config.apiKey,
+        supportImage: this.config.supportImage
+      });
     });
   }
 
   private sendMessage(message: any) {
-    if (!this.iframe?.contentWindow) return;
-    this.iframe.contentWindow?.postMessage(message, 'http://localhost:3001');
+    setTimeout(() => {
+      if (!this.iframe?.contentWindow || !this.isInitialized) return;
+      this.iframe.contentWindow?.postMessage(message, 'http://localhost:3001');
+    }, 100);
+  }
+
+  public login(userId: string) {
+    this.sendMessage({
+      type: 'LOGIN',
+      userId: userId
+    });
+  }
+
+  public logout() {
+    this.sendMessage({
+      type: 'LOGOUT',
+    });
+  }
+
+  public setCustomerData(data: CustomerDataModel) {
+    this.sendMessage({
+      type: 'CUSTOMER_DATA',
+      data: data
+    });
   }
 
   public show(): void {
