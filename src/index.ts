@@ -10,11 +10,22 @@ interface CustomerDataModel {
   phone?: string;
 }
 
+interface QueuedMessage {
+  type: string;
+  payload: any;
+  retries: number;
+  maxRetries: number;
+}
+
 class Heapchat {
   private iframe: HTMLIFrameElement | null = null;
   private toggleButton: HTMLButtonElement | null = null;
   private static instance: Heapchat | null = null;
   private isInitialized: boolean = false;
+  private messageQueue: QueuedMessage[] = [];
+  private isProcessingQueue: boolean = false;
+  private readonly MAX_RETRIES = 3;
+  private readonly RETRY_DELAY = 1000;
 
   constructor(private config: HeapchatConfig) {
     if (Heapchat.instance) {
@@ -95,43 +106,89 @@ class Heapchat {
     this.iframe.addEventListener('load', () => {
       console.log('IFRAME LOADED');
       this.isInitialized = true;
-      this.sendMessage({
+      this.enqueueMessage({
         type: 'INIT',
-        apiKey: this.config.apiKey,
-        supportImage: this.config.supportImage
+        payload: {
+          apiKey: this.config.apiKey,
+          supportImage: this.config.supportImage
+        },
+        retries: 0,
+        maxRetries: this.MAX_RETRIES
       });
     });
   }
 
-  private sendMessage(message: any) {
-    setTimeout(() => {
-      if (!this.iframe?.contentWindow || !this.isInitialized) return;
-      this.iframe.contentWindow?.postMessage(message, 'http://localhost:3001');
-    }, 100);
+  private async processQueue(): Promise<void> {
+    if (this.isProcessingQueue || this.messageQueue.length === 0) return;
+
+    this.isProcessingQueue = true;
+
+    while (this.messageQueue.length > 0) {
+      const message = this.messageQueue[0];
+
+      try {
+        if (!this.iframe?.contentWindow || !this.isInitialized) {
+          throw new Error('iframe not ready');
+        }
+
+        this.iframe.contentWindow.postMessage({
+          type: message.type,
+          ...message.payload
+        }, 'http://localhost:3001');
+
+        // Remove the successfully sent message from queue
+        this.messageQueue.shift();
+      } catch (error) {
+        console.error('Error sending message:', error);
+        
+        if (message.retries < message.maxRetries) {
+          // Increment retry count and move to end of queue
+          message.retries++;
+          this.messageQueue.push(this.messageQueue.shift()!);
+          
+          // Wait before next retry
+          await new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY));
+        } else {
+          // Remove failed message after max retries
+          console.error('Message failed after max retries:', message);
+          this.messageQueue.shift();
+        }
+      }
+    }
+
+    this.isProcessingQueue = false;
+  }
+
+  private enqueueMessage(message: QueuedMessage): void {
+    this.messageQueue.push(message);
+    this.processQueue();
   }
 
   public login(userId: string) {
-    setTimeout(() => {
-      this.sendMessage({
-        type: 'LOGIN',
-        userId: userId
-      });
-    }, 1000);
+    this.enqueueMessage({
+      type: 'LOGIN',
+      payload: { userId },
+      retries: 0,
+      maxRetries: this.MAX_RETRIES
+    });
   }
 
   public logout() {
-    this.sendMessage({
+    this.enqueueMessage({
       type: 'LOGOUT',
+      payload: {},
+      retries: 0,
+      maxRetries: this.MAX_RETRIES
     });
   }
 
   public setCustomerData(data: CustomerDataModel) {
-    setTimeout(() => {
-      this.sendMessage({
-        type: 'CUSTOMER_DATA',
-        data: data
-      });
-    }, 1000);
+    this.enqueueMessage({
+      type: 'CUSTOMER_DATA',
+      payload: { data },
+      retries: 0,
+      maxRetries: this.MAX_RETRIES
+    });
   }
 
   public show(): void {
