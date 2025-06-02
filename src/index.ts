@@ -26,6 +26,7 @@ class Heapchat {
   private isProcessingQueue: boolean = false;
   private readonly MAX_RETRIES = 3;
   private readonly RETRY_DELAY = 1000;
+  private readonly API_URL = 'https://webui.heap.chat';
 
   constructor(private config: HeapchatConfig) {
     if (Heapchat.instance) {
@@ -83,7 +84,7 @@ class Heapchat {
 
     // Create iframe
     this.iframe = document.createElement('iframe');
-    this.iframe.src = `http://localhost:3001`;
+    this.iframe.src = this.API_URL;
     
     // Set iframe styles
     this.iframe.style.cssText = `
@@ -134,7 +135,7 @@ class Heapchat {
         this.iframe.contentWindow.postMessage({
           type: message.type,
           ...message.payload
-        }, 'http://localhost:3001');
+        }, this.API_URL);
 
         // Remove the successfully sent message from queue
         this.messageQueue.shift();
