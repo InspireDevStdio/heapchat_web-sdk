@@ -1,6 +1,6 @@
 {
   "name": "heapchat",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "This is heapchat web sdk to connect website with the dashboard",
   "publishConfig": {
     "access": "public"
