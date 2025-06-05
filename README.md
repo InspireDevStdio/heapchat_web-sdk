@@ -17,33 +17,36 @@ bun add heapchat
 ## Quick Start
 
 ```typescript
-import Heapchat from 'heapchat';
+import { Heapchat } from 'heapchat';
 
-// Initialize the chat widget
-const chat = new Heapchat({
-  apiKey: 'your_api_key_here',
-  position: 'bottom-right', // optional
-  supportImage: 'https://your-support-image.com/image.jpg' // optional
+// Configure the widget
+Heapchat.configure({
+  apiKey: 'your_api_key_here'
 });
 ```
 
 ## Configuration
 
-The SDK accepts the following configuration options:
+The SDK uses a singleton pattern, meaning you'll always work with the same instance across your application. The configuration accepts the following options:
 
 | Option | Type | Required | Default | Description |
 |--------|------|----------|---------|-------------|
 | `apiKey` | string | Yes | - | Your Heapchat API key |
-| `position` | 'bottom-right' \| 'bottom-left' | No | 'bottom-right' | Position of the chat widget |
+| `position` | `Position.BOTTOM_RIGHT` \| `Position.BOTTOM_LEFT` | No | `Position.BOTTOM_RIGHT` | Position of the chat widget. |
 | `supportImage` | string | No | - | Custom support team avatar image URL |
 
 ## API Reference
 
-### Initialization
+### Customization
 
 ```typescript
-const chat = new Heapchat({
-  apiKey: 'your_api_key_here'
+import { Heapchat } from 'heapchat';
+
+// Configure the widget
+Heapchat.configure({
+  apiKey: 'your_api_key_here',
+  position: Position.BOTTOM_RIGHT, // optional
+  supportImage: 'https://yourcdn.com/avatar.png' // optional
 });
 ```
 
@@ -51,12 +54,12 @@ const chat = new Heapchat({
 
 #### Login
 ```typescript
-chat.login('user_id');
+Heapchat.login('user_id');
 ```
 
 #### Logout
 ```typescript
-chat.logout();
+Heapchat.logout();
 ```
 
 ### Customer Data
@@ -64,7 +67,7 @@ chat.logout();
 Set customer information for better support context:
 
 ```typescript
-chat.setCustomerData({
+Heapchat.setCustomerData({
   name: 'John Doe',
   email: 'john@example.com',
   phone: '+1234567890'
@@ -75,17 +78,17 @@ chat.setCustomerData({
 
 #### Show Widget
 ```typescript
-chat.show();
+Heapchat.show();
 ```
 
 #### Hide Widget
 ```typescript
-chat.hide();
+Heapchat.hide();
 ```
 
 #### Destroy Widget
 ```typescript
-chat.destroy();
+Heapchat.destroy();
 ```
 
 ## Widget Behavior
@@ -115,7 +118,7 @@ interface CustomerDataModel {
 
 ## Best Practices
 
-1. Initialize the SDK as early as possible in your application lifecycle
+1. Configure the SDK as early as possible in your application lifecycle
 2. Set customer data when available to provide context for support agents
 3. Handle user authentication state changes by calling appropriate login/logout methods
 4. Clean up resources by calling `destroy()` when the chat widget is no longer needed

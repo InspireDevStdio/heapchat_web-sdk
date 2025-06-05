@@ -1,10 +1,15 @@
-interface HeapchatConfig {
+export enum Position {
+  BOTTOM_RIGHT = 'bottom-right',
+  BOTTOM_LEFT = 'bottom-left'
+}
+
+export type HeapchatConfig = {
   apiKey: string;
-  position?: 'bottom-right' | 'bottom-left';
+  position?: Position;
   supportImage?: string;
 }
 
-interface CustomerDataModel {
+export type CustomerDataModel = {
   name?: string;
   email?: string;
   phone?: string;
@@ -26,24 +31,24 @@ class Heapchat {
   private isProcessingQueue: boolean = false;
   private readonly MAX_RETRIES = 3;
   private readonly RETRY_DELAY = 1000;
-  private readonly API_URL = 'https://webui.heap.chat';
+  private readonly API_URL = 'https://webui.heap.chat/';
+  private position: Position = Position.BOTTOM_RIGHT;
+  private apiKey: string = "";
+  private supportImage?: string;
 
-  constructor(private config: HeapchatConfig) {
-    if (Heapchat.instance) {
-      return Heapchat.instance;
-    }
-
-    this.config = {
-      position: 'bottom-right',
-      ...config
-    };
-    
+  constructor() {
+    if (Heapchat.instance) return Heapchat.instance;
     Heapchat.instance = this;
     this.init();
     return this;
   }
 
+  private isBrowser(): boolean {
+    return typeof window !== 'undefined' && typeof document !== 'undefined';
+  }
+
   private init(): void {
+    if (!this.isBrowser()) return;
     if (this.iframe) return;
 
     // Create toggle button
@@ -55,7 +60,7 @@ class Heapchat {
     `;
     this.toggleButton.style.cssText = `
       position: fixed;
-      ${this.config.position === 'bottom-right' ? 'right: 20px;' : 'left: 20px;'}
+      ${this.position === Position.BOTTOM_RIGHT ? 'right: 20px;' : 'left: 20px;'}
       bottom: 20px;
       width: 48px;
       height: 48px;
@@ -85,11 +90,11 @@ class Heapchat {
     // Create iframe
     this.iframe = document.createElement('iframe');
     this.iframe.src = this.API_URL;
-    
+
     // Set iframe styles
     this.iframe.style.cssText = `
       position: fixed;
-      ${this.config.position === 'bottom-right' ? 'right: 20px;' : 'left: 20px;'}
+      ${this.position === Position.BOTTOM_RIGHT ? 'right: 20px;' : 'left: 20px;'}
       bottom: 80px;
       width: 400px;
       height: 600px;
@@ -103,20 +108,6 @@ class Heapchat {
       display: none;
     `;
     document.body.appendChild(this.iframe);
-
-    this.iframe.addEventListener('load', () => {
-      console.log('IFRAME LOADED');
-      this.isInitialized = true;
-      this.enqueueMessage({
-        type: 'INIT',
-        payload: {
-          apiKey: this.config.apiKey,
-          supportImage: this.config.supportImage
-        },
-        retries: 0,
-        maxRetries: this.MAX_RETRIES
-      });
-    });
   }
 
   private async processQueue(): Promise<void> {
@@ -141,12 +132,12 @@ class Heapchat {
         this.messageQueue.shift();
       } catch (error) {
         console.error('Error sending message:', error);
-        
+
         if (message.retries < message.maxRetries) {
           // Increment retry count and move to end of queue
           message.retries++;
           this.messageQueue.push(this.messageQueue.shift()!);
-          
+
           // Wait before next retry
           await new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY));
         } else {
@@ -163,6 +154,32 @@ class Heapchat {
   private enqueueMessage(message: QueuedMessage): void {
     this.messageQueue.push(message);
     this.processQueue();
+  }
+
+  public configure(config: HeapchatConfig) {
+    this.apiKey = config.apiKey;
+    this.position = config.position || Position.BOTTOM_RIGHT;
+    this.supportImage = config.supportImage;
+
+    if (!this.isBrowser()) {
+      console.warn('Heapchat: configure called in non-browser environment. Skipping initialization.');
+      return;
+    }
+
+    this.iframe?.addEventListener('load', () => {
+      console.log('IFRAME LOADED');
+      this.isInitialized = true;
+      this.enqueueMessage({
+        type: 'INIT',
+        payload: {
+          apiKey: this.apiKey,
+          supportImage: this.supportImage,
+          position: this.position
+        },
+        retries: 0,
+        maxRetries: this.MAX_RETRIES
+      });
+    });
   }
 
   public login(userId: string) {
@@ -193,6 +210,7 @@ class Heapchat {
   }
 
   public show(): void {
+    if (!this.isBrowser()) return;
     if (this.iframe && this.toggleButton) {
       this.iframe.style.display = 'block';
       this.toggleButton.style.transform = 'rotate(180deg)';
@@ -206,6 +224,7 @@ class Heapchat {
   }
 
   public hide(): void {
+    if (!this.isBrowser()) return;
     if (this.iframe && this.toggleButton) {
       this.iframe.style.opacity = '0';
       this.iframe.style.transform = 'translateY(100%)';
@@ -219,6 +238,7 @@ class Heapchat {
   }
 
   public destroy(): void {
+    if (!this.isBrowser()) return;
     if (this.iframe) {
       document.body.removeChild(this.iframe);
       this.iframe = null;
@@ -231,4 +251,9 @@ class Heapchat {
   }
 }
 
-export default Heapchat;
+const singleton = new Heapchat();
+
+export {
+  singleton as Heapchat,
+  Heapchat as HeapchatClass
+};
