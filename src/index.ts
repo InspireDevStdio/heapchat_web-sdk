@@ -31,7 +31,7 @@ class Heapchat {
   private isProcessingQueue: boolean = false;
   private readonly MAX_RETRIES = 3;
   private readonly RETRY_DELAY = 1000;
-  private readonly API_URL = 'https://webui.heap.chat/';
+  private readonly API_URL = 'http://localhost:3001/';
   private position: Position = Position.BOTTOM_RIGHT;
   private apiKey: string = "";
   private supportImage?: string;
@@ -215,7 +215,6 @@ class Heapchat {
     if (!this.isBrowser()) return;
     if (this.iframe && this.toggleButton) {
       this.iframe.style.display = 'block';
-      this.toggleButton.style.transform = 'rotate(180deg)';
       requestAnimationFrame(() => {
         if (this.iframe) {
           this.iframe.style.opacity = '1';
@@ -230,7 +229,6 @@ class Heapchat {
     if (this.iframe && this.toggleButton) {
       this.iframe.style.opacity = '0';
       this.iframe.style.transform = 'translateY(100%)';
-      this.toggleButton.style.transform = 'rotate(0deg)';
       setTimeout(() => {
         if (this.iframe) {
           this.iframe.style.display = 'none';
