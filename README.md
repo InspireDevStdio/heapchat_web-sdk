@@ -103,13 +103,13 @@ Heapchat.destroy();
 The SDK is written in TypeScript and provides full type definitions. Key interfaces include:
 
 ```typescript
-interface HeapchatConfig {
+type HeapchatConfig = {
   apiKey: string;
   position?: 'bottom-right' | 'bottom-left';
   supportImage?: string;
 }
 
-interface CustomerDataModel {
+type CustomerDataModel = {
   name?: string;
   email?: string;
   phone?: string;
