@@ -123,10 +123,12 @@ class Heapchat {
           throw new Error('iframe not ready');
         }
 
-        this.iframe.contentWindow.postMessage({
-          type: message.type,
-          ...message.payload
-        }, this.API_URL);
+        setTimeout(() => {
+          this.iframe?.contentWindow?.postMessage({
+            type: message.type,
+            ...message.payload
+          }, this.API_URL);
+        }, 200);
 
         // Remove the successfully sent message from queue
         this.messageQueue.shift();
