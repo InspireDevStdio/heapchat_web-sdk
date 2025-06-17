@@ -76,17 +76,18 @@ class Heapchat {
         width: 100%;
         height: 85vh;
         border: none;
+        outline: none;
         border-radius: 20px 20px 0 0;
         background: white;
         box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(0, 0, 0, 0.06);
-        border-bottom: none;
         z-index: 999999;
         opacity: 0;
         transform: translateY(100%);
         transition: all 0.3s ease-in-out;
         display: none;
         overflow: hidden;
+        -webkit-border-radius: 20px 20px 0 0;
+        -moz-border-radius: 20px 20px 0 0;
       `;
 
       this.toggleButton.style.cssText = `
@@ -137,16 +138,18 @@ class Heapchat {
         width: 400px;
         height: 600px;
         border: none;
+        outline: none;
         border-radius: 16px;
         background: white;
         box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(0, 0, 0, 0.06);
         z-index: 999999;
         opacity: 0;
         transform: translateY(100%);
         transition: all 0.3s ease-in-out;
         display: none;
         overflow: hidden;
+        -webkit-border-radius: 16px;
+        -moz-border-radius: 16px;
       `;
 
       this.toggleButton.style.cssText = `
