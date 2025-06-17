@@ -7,6 +7,7 @@ export type HeapchatConfig = {
   apiKey: string;
   position?: Position;
   supportImage?: string;
+  showToggleButton?: boolean;
 }
 
 export type CustomerDataModel = {
@@ -38,6 +39,7 @@ class Heapchat {
   private supportImage?: string;
   private isMobile: boolean = false;
   private isOpen: boolean = false;
+  private isToggleButtonVisible: boolean = true;
 
   constructor() {
     if (Heapchat.instance) return Heapchat.instance;
@@ -77,17 +79,17 @@ class Heapchat {
         height: 85vh;
         border: none;
         outline: none;
-        border-radius: 20px 20px 0 0;
-        background: white;
-        box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
+        border-radius: 0.65rem 0.65rem 0 0;
+        background: #09090b;
+        box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.2);
         z-index: 999999;
         opacity: 0;
         transform: translateY(100%);
         transition: all 0.3s ease-in-out;
         display: none;
         overflow: hidden;
-        -webkit-border-radius: 20px 20px 0 0;
-        -moz-border-radius: 20px 20px 0 0;
+        -webkit-border-radius: 0.65rem 0.65rem 0 0;
+        -moz-border-radius: 0.65rem 0.65rem 0 0;
       `;
 
       this.toggleButton.style.cssText = `
@@ -96,11 +98,11 @@ class Heapchat {
         bottom: 12px;
         width: 44px;
         height: 44px;
-        border-radius: 50%;
-        background: #007AFF;
+        border-radius: 0.65rem;
+        background: #2563eb;
         border: none;
         cursor: pointer;
-        display: flex;
+        display: ${this.isToggleButtonVisible ? 'flex' : 'none'};
         align-items: center;
         justify-content: center;
         color: white;
@@ -116,8 +118,8 @@ class Heapchat {
         top: calc(15vh - 36px);
         width: 28px;
         height: 28px;
-        border-radius: 50%;
-        background: #f1f1f1;
+        border-radius: 0.65rem;
+        background: #27272a;
         border: none;
         cursor: pointer;
         display: none;
@@ -139,17 +141,17 @@ class Heapchat {
         height: 600px;
         border: none;
         outline: none;
-        border-radius: 16px;
-        background: white;
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        border-radius: 0.65rem;
+        background: #09090b;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
         z-index: 999999;
         opacity: 0;
         transform: translateY(100%);
         transition: all 0.3s ease-in-out;
         display: none;
         overflow: hidden;
-        -webkit-border-radius: 16px;
-        -moz-border-radius: 16px;
+        -webkit-border-radius: 0.65rem;
+        -moz-border-radius: 0.65rem;
       `;
 
       this.toggleButton.style.cssText = `
@@ -158,11 +160,11 @@ class Heapchat {
         bottom: 20px;
         width: 48px;
         height: 48px;
-        border-radius: 50%;
-        background: #007AFF;
+        border-radius: 0.65rem;
+        background: #2563eb;
         border: none;
         cursor: pointer;
-        display: flex;
+        display: ${this.isToggleButtonVisible ? 'flex' : 'none'};
         align-items: center;
         justify-content: center;
         color: white;
@@ -321,10 +323,16 @@ class Heapchat {
     this.apiKey = config.apiKey;
     this.position = config.position || Position.BOTTOM_RIGHT;
     this.supportImage = config.supportImage;
+    this.isToggleButtonVisible = config.showToggleButton !== false; // Default to true if not specified
 
     if (!this.isBrowser()) {
       console.warn('Heapchat: configure called in non-browser environment. Skipping initialization.');
       return;
+    }
+
+    // Update toggle button visibility
+    if (this.toggleButton) {
+      this.toggleButton.style.display = this.isToggleButtonVisible ? 'flex' : 'none';
     }
 
     this.iframe?.addEventListener('load', () => {
@@ -427,6 +435,18 @@ class Heapchat {
       this.closeButton = null;
     }
     Heapchat.instance = null;
+  }
+
+  public showToggleButton(): void {
+    if (!this.isBrowser() || !this.toggleButton) return;
+    this.isToggleButtonVisible = true;
+    this.toggleButton.style.display = 'flex';
+  }
+
+  public hideToggleButton(): void {
+    if (!this.isBrowser() || !this.toggleButton) return;
+    this.isToggleButtonVisible = false;
+    this.toggleButton.style.display = 'none';
   }
 }
 
