@@ -23,6 +23,44 @@ interface QueuedMessage {
   maxRetries: number;
 }
 
+export type HeapchatTheme = {
+  // Primary colors - dark mode
+  primaryColor?: string;
+  primaryTextColor?: string;
+  secondaryColor?: string;
+  secondaryTextColor?: string;
+  backgroundColor?: string;
+  backgroundTextColor?: string;
+  borderColor?: string;
+  borderTextColor?: string;
+  iconColor?: string;
+  iconTextColor?: string;
+  headerColor?: string;
+  headerIndicatorColor?: string;
+  headerTextColor?: string;
+  destructive?: string;
+  destructiveText?: string;
+
+  // Primary colors - light mode
+  primaryColorLight?: string;
+  primaryTextColorLight?: string;
+  secondaryColorLight?: string;
+  secondaryTextColorLight?: string;
+  backgroundColorLight?: string;
+  backgroundTextColorLight?: string;
+  borderColorLight?: string;
+  borderTextColorLight?: string;
+  iconColorLight?: string;
+  iconTextColorLight?: string;
+  headerColorLight?: string;
+  headerIndicatorColorLight?: string;
+  headerTextColorLight?: string;
+  destructiveLight?: string;
+  destructiveTextLight?: string;
+}
+
+export type ThemeMode = 'light' | 'dark' | 'system';
+
 class Heapchat {
   private iframe: HTMLIFrameElement | null = null;
   private toggleButton: HTMLButtonElement | null = null;
@@ -33,13 +71,25 @@ class Heapchat {
   private isProcessingQueue: boolean = false;
   private readonly MAX_RETRIES = 3;
   private readonly RETRY_DELAY = 1000;
-  private readonly API_URL = 'https://webui.heap.chat/';
+  private readonly API_URL = 'http://localhost:3001/';
   private position: Position = Position.BOTTOM_RIGHT;
   private apiKey: string = "";
   private supportImage?: string;
   private isMobile: boolean = false;
   private isOpen: boolean = false;
   private isToggleButtonVisible: boolean = true;
+  private currentTheme: HeapchatTheme = {
+    primaryColor: '#2563eb',
+    primaryTextColor: '#ffffff',
+    secondaryColor: '#27272a',
+    secondaryTextColor: '#666666',
+
+    primaryColorLight: '#2563eb',
+    primaryTextColorLight: '#ffffff',
+    secondaryColorLight: '#27272a',
+    secondaryTextColorLight: '#666666',
+  };
+  private themeMode: ThemeMode = 'system';
 
   constructor() {
     if (Heapchat.instance) return Heapchat.instance;
@@ -56,6 +106,22 @@ class Heapchat {
     return window.innerWidth <= 768;
   }
 
+  private getSystemTheme(): 'light' | 'dark' {
+    if (!this.isBrowser()) return 'light';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  private getCurrentThemeColors(): { primary: string; primaryText: string; secondary: string; secondaryText: string } {
+    const isDark = this.themeMode === 'dark' || (this.themeMode === 'system' && this.getSystemTheme() === 'dark');
+    
+    return {
+      primary: isDark ? this.currentTheme.primaryColor! : this.currentTheme.primaryColorLight!,
+      primaryText: isDark ? this.currentTheme.primaryTextColor! : this.currentTheme.primaryTextColorLight!,
+      secondary: isDark ? this.currentTheme.secondaryColor! : this.currentTheme.secondaryColorLight!,
+      secondaryText: isDark ? this.currentTheme.secondaryTextColor! : this.currentTheme.secondaryTextColorLight!,
+    };
+  }
+
   private updateMobileState(): void {
     const wasMobile = this.isMobile;
     this.isMobile = this.checkMobile();
@@ -67,6 +133,8 @@ class Heapchat {
 
   private updateStyles(): void {
     if (!this.iframe || !this.toggleButton || !this.closeButton) return;
+
+    const { primary, primaryText, secondary, secondaryText } = this.getCurrentThemeColors();
 
     if (this.isMobile) {
       // Mobile styles
@@ -99,13 +167,13 @@ class Heapchat {
         width: 44px;
         height: 44px;
         border-radius: 0.65rem;
-        background: #2563eb;
+        background: ${primary};
+        color: ${primaryText};
         border: none;
         cursor: pointer;
         display: ${this.isToggleButtonVisible ? 'flex' : 'none'};
         align-items: center;
         justify-content: center;
-        color: white;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         z-index: 999999;
         transition: all 0.3s ease;
@@ -119,13 +187,13 @@ class Heapchat {
         width: 28px;
         height: 28px;
         border-radius: 0.65rem;
-        background: #27272a;
+        background: ${secondary};
+        color: ${secondaryText};
         border: none;
         cursor: pointer;
         display: none;
         align-items: center;
         justify-content: center;
-        color: #666;
         z-index: 1000000;
         transition: all 0.3s ease;
         touch-action: manipulation;
@@ -161,13 +229,13 @@ class Heapchat {
         width: 48px;
         height: 48px;
         border-radius: 0.65rem;
-        background: #2563eb;
+        background: ${primary};
+        color: ${primaryText};
         border: none;
         cursor: pointer;
         display: ${this.isToggleButtonVisible ? 'flex' : 'none'};
         align-items: center;
         justify-content: center;
-        color: white;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         z-index: 999999;
         transition: all 0.3s ease;
@@ -373,6 +441,31 @@ class Heapchat {
     this.enqueueMessage({
       type: 'CUSTOMER_DATA',
       payload: { data },
+      retries: 0,
+      maxRetries: this.MAX_RETRIES
+    });
+  }
+
+  public setTheme(theme: HeapchatTheme) {
+    this.currentTheme = {
+      ...this.currentTheme,
+      ...theme
+    };
+    this.updateStyles();
+    this.enqueueMessage({
+      type: 'THEME',
+      payload: { theme },
+      retries: 0,
+      maxRetries: this.MAX_RETRIES
+    });
+  }
+
+  public setThemeMode(themeMode: ThemeMode) {
+    this.themeMode = themeMode;
+    this.updateStyles();
+    this.enqueueMessage({
+      type: 'THEME_MODE',
+      payload: { themeMode },
       retries: 0,
       maxRetries: this.MAX_RETRIES
     });
