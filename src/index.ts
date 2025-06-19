@@ -71,7 +71,7 @@ class Heapchat {
   private isProcessingQueue: boolean = false;
   private readonly MAX_RETRIES = 3;
   private readonly RETRY_DELAY = 1000;
-  private readonly API_URL = 'http://localhost:3001/';
+  private readonly API_URL = 'https://webui.heap.chat/';
   private position: Position = Position.BOTTOM_RIGHT;
   private apiKey: string = "";
   private supportImage?: string;
