@@ -135,6 +135,15 @@ class Heapchat {
     if (!this.iframe || !this.toggleButton || !this.closeButton) return;
 
     const { primary, primaryText, secondary, secondaryText } = this.getCurrentThemeColors();
+    const isDark = this.themeMode === 'dark' || (this.themeMode === 'system' && this.getSystemTheme() === 'dark');
+    
+    // More subtle shadow colors with better opacity
+    const shadowColor = isDark ? 'rgba(0, 0, 0, 0.15)' : 'rgba(0, 0, 0, 0.08)';
+    const shadowColorStronger = isDark ? 'rgba(0, 0, 0, 0.25)' : 'rgba(0, 0, 0, 0.12)';
+    
+    // Multi-layered shadow for better depth and subtlety
+    const iframeShadow = `0 1px 3px ${shadowColor}, 0 4px 12px ${shadowColorStronger}`;
+    const buttonShadow = `0 2px 4px ${shadowColor}, 0 4px 8px ${shadowColorStronger}`;
 
     if (this.isMobile) {
       // Mobile styles
@@ -149,7 +158,7 @@ class Heapchat {
         outline: none;
         border-radius: 1.5rem 1.5rem 0 0;
         background: #09090b;
-        box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.2);
+        box-shadow: ${iframeShadow};
         z-index: 999999;
         opacity: 0;
         transform: translateY(100%);
@@ -174,7 +183,7 @@ class Heapchat {
         display: ${this.isToggleButtonVisible ? 'flex' : 'none'};
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        box-shadow: ${buttonShadow};
         z-index: 999999;
         transition: all 0.3s ease;
         touch-action: manipulation;
@@ -198,6 +207,7 @@ class Heapchat {
         transition: all 0.3s ease;
         touch-action: manipulation;
         padding: 0;
+        box-shadow: ${buttonShadow};
       `;
     } else {
       // Desktop styles
@@ -211,7 +221,7 @@ class Heapchat {
         outline: none;
         border-radius: 1.5rem;
         background: #09090b;
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+        box-shadow: ${iframeShadow};
         z-index: 999999;
         opacity: 0;
         transform: translateY(100%);
@@ -236,7 +246,7 @@ class Heapchat {
         display: ${this.isToggleButtonVisible ? 'flex' : 'none'};
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        box-shadow: ${buttonShadow};
         z-index: 999999;
         transition: all 0.3s ease;
       `;
