@@ -147,7 +147,7 @@ class Heapchat {
         height: 85vh;
         border: none;
         outline: none;
-        border-radius: 0.65rem 0.65rem 0 0;
+        border-radius: 1.5rem 1.5rem 0 0;
         background: #09090b;
         box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.2);
         z-index: 999999;
@@ -156,8 +156,8 @@ class Heapchat {
         transition: all 0.3s ease-in-out;
         display: none;
         overflow: hidden;
-        -webkit-border-radius: 0.65rem 0.65rem 0 0;
-        -moz-border-radius: 0.65rem 0.65rem 0 0;
+        -webkit-border-radius: 1.5rem 1.5rem 0 0;
+        -moz-border-radius: 1.5rem 1.5rem 0 0;
       `;
 
       this.toggleButton.style.cssText = `
@@ -166,7 +166,7 @@ class Heapchat {
         bottom: 12px;
         width: 44px;
         height: 44px;
-        border-radius: 0.65rem;
+        border-radius: 1.5rem;
         background: ${primary};
         color: ${primaryText};
         border: none;
@@ -186,7 +186,7 @@ class Heapchat {
         top: calc(15vh - 36px);
         width: 28px;
         height: 28px;
-        border-radius: 0.65rem;
+        border-radius: 1.5rem;
         background: ${secondary};
         color: ${secondaryText};
         border: none;
@@ -209,7 +209,7 @@ class Heapchat {
         height: 600px;
         border: none;
         outline: none;
-        border-radius: 0.65rem;
+        border-radius: 1.5rem;
         background: #09090b;
         box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
         z-index: 999999;
@@ -218,8 +218,8 @@ class Heapchat {
         transition: all 0.3s ease-in-out;
         display: none;
         overflow: hidden;
-        -webkit-border-radius: 0.65rem;
-        -moz-border-radius: 0.65rem;
+        -webkit-border-radius: 1.5rem;
+        -moz-border-radius: 1.5rem;
       `;
 
       this.toggleButton.style.cssText = `
@@ -228,7 +228,7 @@ class Heapchat {
         bottom: 20px;
         width: 48px;
         height: 48px;
-        border-radius: 0.65rem;
+        border-radius: 1.5rem;
         background: ${primary};
         color: ${primaryText};
         border: none;
