@@ -8,6 +8,7 @@ export type HeapchatConfig = {
   position?: Position;
   supportImage?: string;
   showToggleButton?: boolean;
+  welcomeMessage?: string;
 }
 
 export type CustomerDataModel = {
@@ -73,6 +74,7 @@ class Heapchat {
   private readonly RETRY_DELAY = 1000;
   private readonly API_URL = 'https://webui.heap.chat/';
   private position: Position = Position.BOTTOM_RIGHT;
+  private welcomeMessage?: string;
   private apiKey: string = "";
   private supportImage?: string;
   private isMobile: boolean = false;
@@ -402,6 +404,7 @@ class Heapchat {
     this.position = config.position || Position.BOTTOM_RIGHT;
     this.supportImage = config.supportImage;
     this.isToggleButtonVisible = config.showToggleButton !== false; // Default to true if not specified
+    this.welcomeMessage = config.welcomeMessage;
 
     if (!this.isBrowser()) {
       console.warn('Heapchat: configure called in non-browser environment. Skipping initialization.');
@@ -421,7 +424,8 @@ class Heapchat {
         payload: {
           apiKey: this.apiKey,
           supportImage: this.supportImage,
-          position: this.position
+          position: this.position,
+          welcomeMessage: this.welcomeMessage
         },
         retries: 0,
         maxRetries: this.MAX_RETRIES
