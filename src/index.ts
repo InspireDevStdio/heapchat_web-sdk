@@ -6,7 +6,6 @@ export enum Position {
 export type HeapchatConfig = {
   apiKey: string;
   position?: Position;
-  supportImage?: string;
   showToggleButton?: boolean;
   welcomeMessage?: string;
 }
@@ -76,7 +75,6 @@ class Heapchat {
   private position: Position = Position.BOTTOM_RIGHT;
   private welcomeMessage?: string;
   private apiKey: string = "";
-  private supportImage?: string;
   private isMobile: boolean = false;
   private isOpen: boolean = false;
   private isToggleButtonVisible: boolean = true;
@@ -402,7 +400,6 @@ class Heapchat {
   public configure(config: HeapchatConfig) {
     this.apiKey = config.apiKey;
     this.position = config.position || Position.BOTTOM_RIGHT;
-    this.supportImage = config.supportImage;
     this.isToggleButtonVisible = config.showToggleButton !== false; // Default to true if not specified
     this.welcomeMessage = config.welcomeMessage;
 
@@ -423,7 +420,6 @@ class Heapchat {
         type: 'INIT',
         payload: {
           apiKey: this.apiKey,
-          supportImage: this.supportImage,
           position: this.position,
           welcomeMessage: this.welcomeMessage
         },
