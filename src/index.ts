@@ -6,7 +6,6 @@ export enum Position {
 export type HeapchatConfig = {
   apiKey: string;
   position?: Position;
-  showToggleButton?: boolean;
   welcomeMessage?: string;
 }
 
@@ -400,8 +399,7 @@ class Heapchat {
   public configure(config: HeapchatConfig) {
     this.apiKey = config.apiKey;
     this.position = config.position || Position.BOTTOM_RIGHT;
-    this.isToggleButtonVisible = config.showToggleButton !== false; // Default to true if not specified
-    this.welcomeMessage = config.welcomeMessage;
+    this.welcomeMessage = config.welcomeMessage || 'How can we assist you today?';
 
     if (!this.isBrowser()) {
       console.warn('Heapchat: configure called in non-browser environment. Skipping initialization.');
