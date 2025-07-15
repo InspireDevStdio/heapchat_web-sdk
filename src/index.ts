@@ -454,6 +454,15 @@ class Heapchat {
     });
   }
 
+  public setCustomerCustomData(customData: Record<string, string>) {
+    this.enqueueMessage({
+      type: 'CUSTOMER_CUSTOM_DATA',
+      payload: { customData },
+      retries: 0,
+      maxRetries: this.MAX_RETRIES
+    });
+  }
+
   public setTheme(theme: HeapchatTheme) {
     this.currentTheme = {
       ...this.currentTheme,
