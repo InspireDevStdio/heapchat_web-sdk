@@ -63,7 +63,6 @@ export type ThemeMode = 'light' | 'dark' | 'system';
 class Heapchat {
   private iframe: HTMLIFrameElement | null = null;
   private toggleButton: HTMLButtonElement | null = null;
-  private closeButton: HTMLButtonElement | null = null;
   private static instance: Heapchat | null = null;
   private isInitialized: boolean = false;
   private messageQueue: QueuedMessage[] = [];
@@ -131,9 +130,9 @@ class Heapchat {
   }
 
   private updateStyles(): void {
-    if (!this.iframe || !this.toggleButton || !this.closeButton) return;
+    if (!this.iframe || !this.toggleButton) return;
 
-    const { primary, primaryText, secondary, secondaryText } = this.getCurrentThemeColors();
+    const { primary, primaryText } = this.getCurrentThemeColors();
     const isDark = this.themeMode === 'dark' || (this.themeMode === 'system' && this.getSystemTheme() === 'dark');
     
     // More subtle shadow colors with better opacity
@@ -187,27 +186,6 @@ class Heapchat {
         transition: all 0.3s ease;
         touch-action: manipulation;
       `;
-
-      this.closeButton.style.cssText = `
-        position: fixed;
-        right: 8px;
-        top: calc(15vh - 36px);
-        width: 28px;
-        height: 28px;
-        border-radius: 1.5rem;
-        background: ${secondary};
-        color: ${secondaryText};
-        border: none;
-        cursor: pointer;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000000;
-        transition: all 0.3s ease;
-        touch-action: manipulation;
-        padding: 0;
-        box-shadow: ${buttonShadow};
-      `;
     } else {
       // Desktop styles
       this.iframe.style.cssText = `
@@ -249,9 +227,6 @@ class Heapchat {
         z-index: 999999;
         transition: all 0.3s ease;
       `;
-
-      // Hide close button on desktop
-      this.closeButton.style.display = 'none';
     }
   }
 
@@ -293,13 +268,7 @@ class Heapchat {
     // Create toggle button
     this.toggleButton = document.createElement('button');
     
-    // Create close button (only for mobile)
-    this.closeButton = document.createElement('button');
-    this.closeButton.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="currentColor"/>
-      </svg>
-    `;
+
 
     // Set initial toggle icon
     this.updateToggleIcon();
@@ -322,21 +291,11 @@ class Heapchat {
       this.toggleWidget();
     });
 
-    this.closeButton.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      this.hide();
-    });
-
     this.toggleButton.addEventListener('click', () => {
       this.toggleWidget();
     });
 
-    this.closeButton.addEventListener('click', () => {
-      this.hide();
-    });
-
     document.body.appendChild(this.toggleButton);
-    document.body.appendChild(this.closeButton);
     document.body.appendChild(this.iframe);
   }
 
@@ -425,6 +384,15 @@ class Heapchat {
         maxRetries: this.MAX_RETRIES
       });
     });
+
+    // Listen for messages from iframe
+    window.addEventListener('message', (event) => {
+      if (event.origin !== this.API_URL) return;
+      
+      if (event.data.type === 'CLOSE') {
+        this.hide();
+      }
+    });
   }
 
   public login(userId: string) {
@@ -490,13 +458,10 @@ class Heapchat {
 
   public show(): void {
     if (!this.isBrowser()) return;
-    if (this.iframe && this.toggleButton && this.closeButton) {
+    if (this.iframe && this.toggleButton) {
       this.isOpen = true;
       this.updateToggleIcon();
       this.iframe.style.display = 'block';
-      if (this.isMobile) {
-        this.closeButton.style.display = 'flex';
-      }
       // Prevent body scroll on mobile when widget is open
       if (this.isMobile) {
         document.body.style.overflow = 'hidden';
@@ -512,12 +477,11 @@ class Heapchat {
 
   public hide(): void {
     if (!this.isBrowser()) return;
-    if (this.iframe && this.toggleButton && this.closeButton) {
+    if (this.iframe && this.toggleButton) {
       this.isOpen = false;
       this.updateToggleIcon();
       this.iframe.style.opacity = '0';
       this.iframe.style.transform = 'translateY(100%)';
-      this.closeButton.style.display = 'none';
       // Restore body scroll on mobile
       if (this.isMobile) {
         document.body.style.overflow = '';
@@ -539,10 +503,6 @@ class Heapchat {
     if (this.toggleButton) {
       document.body.removeChild(this.toggleButton);
       this.toggleButton = null;
-    }
-    if (this.closeButton) {
-      document.body.removeChild(this.closeButton);
-      this.closeButton = null;
     }
     Heapchat.instance = null;
   }
