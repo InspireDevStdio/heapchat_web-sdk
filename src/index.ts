@@ -387,8 +387,6 @@ class Heapchat {
 
     // Listen for messages from iframe
     window.addEventListener('message', (event) => {
-      if (event.origin !== this.API_URL) return;
-      
       if (event.data.type === 'CLOSE') {
         this.hide();
       }
