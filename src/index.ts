@@ -492,19 +492,6 @@ class Heapchat {
     }
   }
 
-  public destroy(): void {
-    if (!this.isBrowser()) return;
-    if (this.iframe) {
-      document.body.removeChild(this.iframe);
-      this.iframe = null;
-    }
-    if (this.toggleButton) {
-      document.body.removeChild(this.toggleButton);
-      this.toggleButton = null;
-    }
-    Heapchat.instance = null;
-  }
-
   public showToggleButton(): void {
     if (!this.isBrowser() || !this.toggleButton) return;
     this.isToggleButtonVisible = true;
