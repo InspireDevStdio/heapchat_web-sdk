@@ -65,9 +65,6 @@ class Heapchat {
   private toggleButton: HTMLButtonElement | null = null;
   private static instance: Heapchat | null = null;
   private isInitialized: boolean = false;
-  private hasBeenConfigured = false;
-  private destroyed = false;
-
   private messageQueue: QueuedMessage[] = [];
   private isProcessingQueue: boolean = false;
   private readonly MAX_RETRIES = 3;
@@ -262,7 +259,8 @@ class Heapchat {
   }
 
   private init(): void {
-    if (!this.isBrowser() || this.iframe || this.toggleButton) return; // prevent double injection
+    if (!this.isBrowser()) return;
+    if (this.iframe) return;
 
     this.isMobile = this.checkMobile();
     this.isOpen = false;
@@ -270,6 +268,8 @@ class Heapchat {
     // Create toggle button
     this.toggleButton = document.createElement('button');
     
+
+
     // Set initial toggle icon
     this.updateToggleIcon();
 
@@ -356,9 +356,6 @@ class Heapchat {
   }
 
   public configure(config: HeapchatConfig) {
-    if (this.hasBeenConfigured) return; // don't reconfigure on strict mode re-run
-    this.hasBeenConfigured = true;
-
     this.apiKey = config.apiKey;
     this.position = config.position || Position.BOTTOM_RIGHT;
     this.welcomeMessage = config.welcomeMessage || 'How can we assist you today?';
@@ -496,11 +493,7 @@ class Heapchat {
   }
 
   public destroy(): void {
-    if (this.destroyed) return; // prevent multiple destroys
-    this.destroyed = true;
-
     if (!this.isBrowser()) return;
-    
     if (this.iframe) {
       document.body.removeChild(this.iframe);
       this.iframe = null;
