@@ -68,6 +68,7 @@ class Heapchat {
   private isInitialized: boolean = false;
   private messageQueue: QueuedMessage[] = [];
   private isProcessingQueue: boolean = false;
+  private hasQueuedInit: boolean = false;
   private readonly MAX_RETRIES = 3;
   private readonly RETRY_DELAY = 1000;
   private readonly DEFAULT_WEBUI_URL = 'https://webui.heap.chat/';
@@ -119,6 +120,10 @@ class Heapchat {
     const value = url?.trim();
     if (!value) return this.DEFAULT_WEBUI_URL;
     return value.endsWith('/') ? value : `${value}/`;
+  }
+
+  private getWebuiOrigin(): string {
+    return new URL(this.webuiUrl).origin;
   }
 
   private getCurrentThemeColors(): { primary: string; primaryText: string; secondary: string; secondaryText: string } {
@@ -337,12 +342,10 @@ class Heapchat {
           throw new Error('iframe not ready');
         }
 
-        setTimeout(() => {
-          this.iframe?.contentWindow?.postMessage({
-            type: message.type,
-            ...message.payload
-          }, this.webuiUrl);
-        }, 200);
+        this.iframe.contentWindow.postMessage({
+          type: message.type,
+          ...message.payload
+        }, this.getWebuiOrigin());
 
         // Remove the successfully sent message from queue
         this.messageQueue.shift();
@@ -372,6 +375,23 @@ class Heapchat {
     this.processQueue();
   }
 
+  private queueInitMessage(): void {
+    if (this.hasQueuedInit) return;
+
+    this.hasQueuedInit = true;
+    this.isInitialized = true;
+    this.enqueueMessage({
+      type: 'INIT',
+      payload: {
+        apiKey: this.apiKey,
+        position: this.position,
+        welcomeMessage: this.welcomeMessage
+      },
+      retries: 0,
+      maxRetries: this.MAX_RETRIES
+    });
+  }
+
   public configure(config: HeapchatConfig) {
     this.apiKey = config.apiKey;
     this.position = config.position || Position.BOTTOM_RIGHT;
@@ -385,6 +405,7 @@ class Heapchat {
 
     const shouldReloadIframe = Boolean(this.iframe && this.webuiUrl !== nextWebuiUrl);
     this.webuiUrl = nextWebuiUrl;
+    this.hasQueuedInit = false;
 
     // Update toggle button visibility
     if (this.toggleButton) {
@@ -393,17 +414,7 @@ class Heapchat {
 
     this.iframe?.addEventListener('load', () => {
       console.log('IFRAME LOADED');
-      this.isInitialized = true;
-      this.enqueueMessage({
-        type: 'INIT',
-        payload: {
-          apiKey: this.apiKey,
-          position: this.position,
-          welcomeMessage: this.welcomeMessage
-        },
-        retries: 0,
-        maxRetries: this.MAX_RETRIES
-      });
+      window.setTimeout(() => this.queueInitMessage(), 750);
     });
 
     if (shouldReloadIframe && this.iframe) {
@@ -413,6 +424,10 @@ class Heapchat {
 
     // Listen for messages from iframe
     window.addEventListener('message', (event) => {
+      if (event.source === this.iframe?.contentWindow && event.data.type === 'READY') {
+        this.queueInitMessage();
+      }
+
       if (event.data.type === 'CLOSE') {
         this.hide();
       }
