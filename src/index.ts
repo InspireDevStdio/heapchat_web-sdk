@@ -7,6 +7,7 @@ export type HeapchatConfig = {
   apiKey: string;
   position?: Position;
   welcomeMessage?: string;
+  webuiUrl?: string;
 }
 
 export type CustomerDataModel = {
@@ -69,7 +70,8 @@ class Heapchat {
   private isProcessingQueue: boolean = false;
   private readonly MAX_RETRIES = 3;
   private readonly RETRY_DELAY = 1000;
-  private readonly API_URL = 'https://webui.heap.chat/';
+  private readonly DEFAULT_WEBUI_URL = 'https://webui.heap.chat/';
+  private webuiUrl = this.DEFAULT_WEBUI_URL;
   private position: Position = Position.BOTTOM_RIGHT;
   private welcomeMessage?: string;
   private apiKey: string = "";
@@ -88,6 +90,10 @@ class Heapchat {
     secondaryTextColorLight: '#666666',
   };
   private themeMode: ThemeMode = 'system';
+  private readonly TEST_IDS = {
+    toggleButton: 'heapchat-web-launcher-button',
+    iframe: 'heapchat-web-widget-iframe'
+  };
 
   constructor() {
     if (Heapchat.instance) return Heapchat.instance;
@@ -107,6 +113,12 @@ class Heapchat {
   private getSystemTheme(): 'light' | 'dark' {
     if (!this.isBrowser()) return 'light';
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  private normalizeWebuiUrl(url?: string): string {
+    const value = url?.trim();
+    if (!value) return this.DEFAULT_WEBUI_URL;
+    return value.endsWith('/') ? value : `${value}/`;
   }
 
   private getCurrentThemeColors(): { primary: string; primaryText: string; secondary: string; secondaryText: string } {
@@ -267,7 +279,9 @@ class Heapchat {
 
     // Create toggle button
     this.toggleButton = document.createElement('button');
-    
+    this.toggleButton.setAttribute('data-testid', this.TEST_IDS.toggleButton);
+    this.toggleButton.setAttribute('aria-label', 'Open HeapChat support');
+    this.toggleButton.setAttribute('data-heapchat-created-at', new Date().toISOString());
 
 
     // Set initial toggle icon
@@ -275,7 +289,10 @@ class Heapchat {
 
     // Create iframe
     this.iframe = document.createElement('iframe');
-    this.iframe.src = this.API_URL;
+    this.iframe.setAttribute('data-testid', this.TEST_IDS.iframe);
+    this.iframe.setAttribute('title', 'HeapChat support chat');
+    this.iframe.setAttribute('data-heapchat-created-at', new Date().toISOString());
+    this.iframe.src = this.webuiUrl;
 
     // Update styles based on device type
     this.updateStyles();
@@ -324,7 +341,7 @@ class Heapchat {
           this.iframe?.contentWindow?.postMessage({
             type: message.type,
             ...message.payload
-          }, this.API_URL);
+          }, this.webuiUrl);
         }, 200);
 
         // Remove the successfully sent message from queue
@@ -359,11 +376,15 @@ class Heapchat {
     this.apiKey = config.apiKey;
     this.position = config.position || Position.BOTTOM_RIGHT;
     this.welcomeMessage = config.welcomeMessage || 'How can we assist you today?';
+    const nextWebuiUrl = this.normalizeWebuiUrl(config.webuiUrl);
 
     if (!this.isBrowser()) {
       console.warn('Heapchat: configure called in non-browser environment. Skipping initialization.');
       return;
     }
+
+    const shouldReloadIframe = Boolean(this.iframe && this.webuiUrl !== nextWebuiUrl);
+    this.webuiUrl = nextWebuiUrl;
 
     // Update toggle button visibility
     if (this.toggleButton) {
@@ -384,6 +405,11 @@ class Heapchat {
         maxRetries: this.MAX_RETRIES
       });
     });
+
+    if (shouldReloadIframe && this.iframe) {
+      this.isInitialized = false;
+      this.iframe.src = this.webuiUrl;
+    }
 
     // Listen for messages from iframe
     window.addEventListener('message', (event) => {
@@ -458,6 +484,8 @@ class Heapchat {
     if (!this.isBrowser()) return;
     if (this.iframe && this.toggleButton) {
       this.isOpen = true;
+      this.iframe.setAttribute('data-heapchat-opened-at', new Date().toISOString());
+      this.toggleButton.setAttribute('data-heapchat-opened-at', new Date().toISOString());
       this.updateToggleIcon();
       this.iframe.style.display = 'block';
       // Prevent body scroll on mobile when widget is open
